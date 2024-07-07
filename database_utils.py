@@ -3,10 +3,7 @@ import psycopg2
 from sqlalchemy import create_engine, inspect
 import pandas as pd
 
-if __name__ == "__main__":
-
-
-    class DatabaseConnector:
+class DatabaseConnector:
         def __init__(self):
             self.DATABASE_TYPE = 'postgresql'
             self.DBAPI = 'psycopg2'
@@ -48,7 +45,7 @@ if __name__ == "__main__":
             # Now create a method in your DatabaseConnector class called upload_to_db. This method will take in a Pandas DataFrame and table name to upload to as an argument.
             #Once extracted and cleaned use the upload_to_db method to store the data in your sales_data database in a table named dim_users.
 
-        
+if __name__ == "__main__":    
     connector = DatabaseConnector()
     connector.init_db_engine()
     connector.list_db_tables()
