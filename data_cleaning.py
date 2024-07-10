@@ -10,6 +10,11 @@ class DataCleaning:
     def clean_card_data(self, df):
         df = df.dropna()
         return df
+    
+    def called_clean_store_data(self, df):
+        df = df.dropna()
+        return df
+
         
 
 
