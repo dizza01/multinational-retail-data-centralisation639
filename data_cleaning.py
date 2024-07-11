@@ -11,12 +11,10 @@ class DataCleaning:
         df = df.dropna()
         return df
     
-    def called_clean_store_data(self, df):
+    def clean_store_data(self, df):
         df = df.dropna()
         return df
 
         
 
 
-# Step 3:
-# Create a method called clean_card_data in your DataCleaning class to clean the data to remove any erroneous values, NULL values or errors with formatting.

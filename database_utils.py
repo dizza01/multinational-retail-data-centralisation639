@@ -17,14 +17,14 @@ class DatabaseConnector:
     #           You will need to pip install PyYAML and import yaml to do this.
 
         def init_db_engine(self):
-            config_data = self.read_db_creds('db_creds.yaml')
+            config_data = self.read_db_creds('pg_db_creds.yaml')
             DATABASE_TYPE = self.DATABASE_TYPE
             DBAPI = self.DBAPI
-            HOST = config_data['RDS_HOST']
-            USER = config_data["RDS_USER"]
-            PASSWORD = config_data["RDS_PASSWORD"]
-            DATABASE = config_data["RDS_DATABASE"]
-            PORT = config_data["RDS_PORT"]
+            HOST = config_data['PG_HOST']
+            USER = config_data["PG_USER"]
+            PASSWORD = config_data["PG_PASSWORD"]
+            DATABASE = config_data["PG_DATABASE"]
+            PORT = config_data["PG_PORT"]
             engine = create_engine(f"{DATABASE_TYPE}+{DBAPI}://{USER}:{PASSWORD}@{HOST}:{PORT}/{DATABASE}")
             return engine
             # Now create a method init_db_engine which will read the credentials from the return of read_db_creds and 
@@ -49,12 +49,5 @@ if __name__ == "__main__":
     connector = DatabaseConnector()
     connector.init_db_engine()
     connector.list_db_tables()
-
-    # from sklearn.datasets import load_iris
-    # data = load_iris()
-    # iris = pd.DataFrame(data['data'], columns=data['feature_names'])
-    # iris.head()
-    # connector.upload_to_db(iris, 'iris')
-    # connector.list_db_tables
 
 

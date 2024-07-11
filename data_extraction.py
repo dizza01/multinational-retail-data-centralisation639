@@ -49,35 +49,18 @@ class DataExtractor:
         print(df.head())
         return df
 
-    # Create another method retrieve_stores_data which will take the retrieve a store endpoint as an argument 
-    # and extracts all the stores from the API saving them in a pandas DataFrame.
-        
-
-# The two endpoints for the API are as follows:
-
-# Retrieve a store: https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details/{store_number}
-# Return the number of stores: https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/number_stores
-        
-  
-    #         Step 2:
-#   Create a method in your DataExtractor class called retrieve_pdf_data, which takes in a link as an argument and returns a pandas DataFrame.
-#   Use the tabula-py Python package, imported with tabula to extract all pages from the pdf document at following link .
-#   Then return a DataFrame of the extracted data.
-    
-   
-
-
-
+# dim_card_details #
+#card data extract and clean 
 pdf_url = 'https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf'
 extractor = DataExtractor()
-# df = extractor.retrieve_pdf_data(pdf_url)
+card_df = extractor.retrieve_pdf_data(pdf_url)
 
+connector = DatabaseConnector()
+cleaner = DataCleaning()
+cleaned_card_df = cleaner.clean_card_data(card_df)
 
-# connector = DatabaseConnector()
-# cleaner = DataCleaning()
-# cleaned_df = cleaner.clean_card_data(df)
-
-
+# dim_store_details #
+#Store data extract and clean
 no_stores_endpoint = "https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/number_stores"
 headers = {
         'x-api-key': 'yFBQbwXe9J3sd6zWVAMrK6lcxxr0q1lr2PT6DDMX'
@@ -85,6 +68,13 @@ headers = {
 stores_endpoint = "https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details"
 
 no_of_stores = extractor.list_number_of_stores(no_stores_endpoint, headers)
+stores_df = extractor.retrieve_stores_data(stores_endpoint, headers, no_of_stores)
+cleaned_stores_df = cleaner.clean_store_data(stores_df)
 
-df = extractor.retrieve_stores_data(stores_endpoint, headers, no_of_stores)
-print(df)
+
+#upload
+connector.upload_to_db(cleaned_card_df, 'dim_card_details')
+connector.upload_to_db(cleaned_stores_df, 'dim_store_details')
+
+
+
