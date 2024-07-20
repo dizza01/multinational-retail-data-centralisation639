@@ -1,0 +1,17 @@
+# For data manipulation and cleaning
+pandas>=1.3.0
+
+# For PDF extraction
+tabula-py>=2.5.2
+
+# For PostgreSQL database connection
+psycopg2-binary>=2.9.0
+
+# Optional: For handling JSON data
+jsonschema>=4.0.0
+
+# Optional: For date/time handling
+python-dateutil>=2.8.0
+
+# Optional: For working with SQL queries
+SQLAlchemy>=1.4.0
