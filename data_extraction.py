@@ -21,18 +21,24 @@ class DataExtractor:
         tables = tabula.read_pdf(pdf_url, pages='all', multiple_tables=True)
 
         if tables:
+            all_dfs = []
             for i, table in enumerate(tables):
                 print(f"Table {i + 1}")
                 print(table)
                 
                 # Save the table to a DataFrame
                 df = pd.DataFrame(table)
-
-                # Print the DataFrame
-                print(df)
-                return df
+                all_dfs.append(df)
+                
+            # Concatenate all DataFrames if they have the same columns
+            combined_df = pd.concat(all_dfs, ignore_index=True)
+            print("Combined DataFrame:")
+            print(combined_df)
+            return combined_df
         else:
-            print("No tables found in the PDF.")   
+            print("No tables found in the PDF.")
+            return pd.DataFrame()  # Return an empty DataFrame if no tables are found
+
 
     def list_number_of_stores(self, no_stores_endpoint, headers_dict):
         payload = {}
@@ -103,14 +109,14 @@ if __name__ == "__main__":
     cleaner = DataCleaning()
     extractor = DataExtractor()
 
-    # # dim_card_details #
-    # #card data extract and clean 
-    # pdf_url = 'https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf'
-    # card_df = extractor.retrieve_pdf_data(pdf_url)
-    # cleaned_card_df = cleaner.clean_card_data(card_df)
+    # dim_card_details #
+    #card data extract and clean 
+    pdf_url = 'https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf'
+    card_df = extractor.retrieve_pdf_data(pdf_url)
+    cleaned_card_df = cleaner.clean_card_data(card_df)
 
-    # # dim_store_details #
-    # #Store data extract and clean
+    # # # dim_store_details #
+    # # #Store data extract and clean
     # no_stores_endpoint = "https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/number_stores"
     # headers = {
     #         'x-api-key': 'yFBQbwXe9J3sd6zWVAMrK6lcxxr0q1lr2PT6DDMX'
@@ -122,43 +128,45 @@ if __name__ == "__main__":
     # cleaned_stores_df = cleaner.clean_store_data(stores_df)
 
 
-    #products
-    # Convert product weights to kg
+    # #products
+    # # Convert product weights to kg
     # s3_address = 's3://data-handling-public/products.csv'
     # extractor = DataExtractor()
     # products_df = extractor.extract_from_s3(s3_address)
-    # print(products_df.head())
+    # # Convert weights the products data
     # products_df = cleaner.convert_product_weights(products_df)
-    # print("After converting weights to kg:")
-    # print(products_df)
-    
+    # print(products_df.head())
+
     # # Clean the products data
     # cleaned_products_df = cleaner.clean_products_data(products_df)
-    # print("After cleaning the data:")
-    # print(cleaned_products_df)
+    # print(cleaned_products_df.head())
 
-
-
-    # orders 
-    # connector.list_db_tables('db_creds.yaml', 'RDS')
-    # # ['legacy_store_details', 'dim_card_details', 'legacy_users', 'orders_table']
-    
+    ## orders 
+    # # connector.list_db_tables('db_creds.yaml', 'RDS')
+    # # # ['legacy_store_details', 'dim_card_details', 'legacy_users', 'orders_table']
     # orders_df = extractor.read_rds_table(connector,'db_creds.yaml', 'RDS', 'orders_table')
-    # print(orders_df.head())
     # cleaned_orders_df = cleaner.clean_orders_data(orders_df)
-    # print(cleaned_orders_df.head())
+
+
+    # # Users
+    # users_df = extractor.read_rds_table(connector,'db_creds.yaml', 'RDS', 'legacy_users')
+    # print(users_df.head())
+    # filtered_df = users_df[users_df['date_of_birth'].notna() & ~users_df['date_of_birth'].str.match(r'^\d{4}-\d{2}-\d{2}$')]
+    # print(filtered_df)
+    # cleaned_users_df = cleaner.clean_user_data(users_df)
+
 
     # date_time data
 
-    # URL of the JSON file on S3
-    url = "https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json"
+    # # URL of the JSON file on S3
+    # url = "https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json"
     
-    # Create an instance of DataExtractor
-    extractor = DataExtractor()
+    # # Create an instance of DataExtractor
+    # extractor = DataExtractor()
     
-    # Extract the JSON data and convert it to a DataFrame
-    dates_df = extractor.extract_json_from_s3(url)
-    cleaned_dates_df = cleaner.clean_date_times_data(dates_df)
+    # # # Extract the JSON data and convert it to a DataFrame
+    # dates_df = extractor.extract_json_from_s3(url)
+    # cleaned_dates_df = cleaner.clean_date_times_data(dates_df)
     
 
 
@@ -168,10 +176,11 @@ if __name__ == "__main__":
     #upload
     pg_connector = DatabaseConnector()
     # connector.upload_to_db('pg_db_creds.yaml', 'PG', cleaned_card_df, 'dim_card_details')
+    # connector.upload_to_db('pg_db_creds.yaml', 'PG', cleaned_users_df, 'dim_users')
     # connector.upload_to_db('pg_db_creds.yaml', 'PG', cleaned_stores_df, 'dim_store_details')
     # connector.upload_to_db('pg_db_creds.yaml', 'PG', cleaned_products_df, 'dim_products')
     # pg_connector.upload_to_db('pg_db_creds.yaml', 'PG', cleaned_orders_df, 'orders_table')
-    connector.upload_to_db('pg_db_creds.yaml', 'PG', cleaned_dates_df, 'dim_date_times')
+    # connector.upload_to_db('pg_db_creds.yaml', 'PG', cleaned_dates_df, 'dim_date_times')
     pg_connector.list_db_tables('pg_db_creds.yaml', 'PG')
 
 
