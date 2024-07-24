@@ -1,3 +1,5 @@
 db_creds.yaml
 pg_db_creds.yaml
 venv
+__pycache__/
+*.pyc
