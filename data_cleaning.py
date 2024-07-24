@@ -1,5 +1,6 @@
 import re
 import pandas as pd
+import numpy as np
 
 
 class DataCleaning:
@@ -114,10 +115,13 @@ class DataCleaning:
         Returns:
             str or None: The cleaned card number if valid, otherwise None.
         """
-        try:
-            value_str = str(int(value))
-            return value_str if len(value_str) <= 16 else None
-        except (ValueError, TypeError):
+        # Convert value to string
+        value_str = str(value)
+        # Remove non-digit characters
+        cleaned_value = re.sub(r'\D', '', value_str)
+        if len(cleaned_value) > 2:
+            return cleaned_value
+        else:
             return None
 
     def clean_expiry_date(self, value):
@@ -159,11 +163,7 @@ class DataCleaning:
         Returns:
             DataFrame: The cleaned DataFrame with valid card data.
         """
-        card_number_to_query = 2314734659486501
-
-        # Using boolean indexing to find the specific card number
-        result_df = df[df['card_number'] == card_number_to_query]
-        print(result_df)
+        print ("before len:",len(df))
 
         distinct_product_card_number = df['card_number'].nunique()
         print(f"Number of distinct card_number: {distinct_product_card_number}")
@@ -178,10 +178,8 @@ class DataCleaning:
         df = df.dropna(subset=['card_number'])
         distinct_product_card_number = df['card_number'].nunique()
         print(f"Number of distinct card_number: {distinct_product_card_number}")
+        print ("after len:",len(df))
 
-        result_df = df[df['card_number'] == card_number_to_query]
-        print(result_df)
-        
         df = df.drop_duplicates()
         return df
 
@@ -195,50 +193,37 @@ class DataCleaning:
         Returns:
             DataFrame: The cleaned DataFrame with valid store data.
         """
-        # Debugging: Show initial DataFrame
-        print("Initial DataFrame:\n", df)
+        
+        distinct_store_code = df['store_code'].nunique()
+        print(f"Number of distinct store codes: {distinct_store_code}")
 
         # Apply the valid float check function
         df['longitude'] = df['longitude'].apply(lambda x: x if self.is_valid_float(x) else None)
         df['latitude'] = df['latitude'].apply(lambda x: x if self.is_valid_float(x) else None)
         df['lat'] = df['lat'].apply(lambda x: x if self.is_valid_float(x) else None)
 
-        # Debugging: Show DataFrame after float validation
-        print("\nAfter float validation:\n", df)
-
         # Convert the columns to numeric, coercing errors to NaN
         df['longitude'] = pd.to_numeric(df['longitude'], errors='coerce')
         df['latitude'] = pd.to_numeric(df['latitude'], errors='coerce')
         df['lat'] = pd.to_numeric(df['lat'], errors='coerce')
 
-        # Debugging: Show DataFrame after converting to numeric
-        print("\nAfter converting to numeric:\n", df)
-
-        # Apply the valid integer check function
-        df['staff_numbers'] = df['staff_numbers'].apply(lambda x: x if self.is_valid_int(x) else None)
-
-        # Debugging: Show DataFrame after integer validation
-        print("\nAfter integer validation:\n", df)
+        # # Apply the valid integer check function
+        # df['staff_numbers'] = df['staff_numbers'].apply(lambda x: x if self.is_valid_int(x) else None)
 
         # Convert date strings to date objects
         df['opening_date'] = df['opening_date'].apply(lambda x: self.convert_to_date(x))
         df['opening_date'] = df['opening_date'].apply(lambda x: x if pd.notna(x) and x != "NULL" else None)
 
-        # Debugging: Show DataFrame after date conversion
-        print("\nAfter date conversion:\n", df)
-
         # Drop rows with NaN values in the specified columns
-        df = df.dropna(subset=['longitude'])
-        df = df.dropna(subset=['latitude', 'lat'], how='all')
-
-        # Debugging: Show DataFrame after dropping NaN values
-        print("\nAfter dropping NaN values:\n", df)
+        df.replace(['N/A', 'na', 'NA', 'n/a'], np.nan, inplace=True)
+        df = df.dropna(subset=['store_code'])
 
         # Drop duplicates
         df = df.drop_duplicates()
 
         # Debugging: Show final cleaned DataFrame
-        print("\nFinal cleaned DataFrame:\n", df)
+        distinct_store_code = df['store_code'].nunique()
+        print(f"Number of distinct store codes: {distinct_store_code}")
         return df
 
     @staticmethod
@@ -285,9 +270,6 @@ class DataCleaning:
         Returns:
             DataFrame: The cleaned DataFrame with valid product data.
         """
-        distinct_product_codes_count = df['product_code'].nunique()
-        print(f"Number of distinct product codes: {distinct_product_codes_count}")
-
         def clean_product_price(price):
             """
             Clean product price by removing currency symbols.
@@ -311,10 +293,10 @@ class DataCleaning:
 
         # Ensure UUID is valid
         df['uuid'] = df['uuid'].apply(lambda x: x if isinstance(x, str) and len(x) == 36 else None)
+
         df = df.dropna(subset=['product_code'])
+
         df = df.drop_duplicates()
-        distinct_product_codes_count = df['product_code'].nunique()
-        print(f"Number of distinct product codes: {distinct_product_codes_count}")
         return df
 
     def clean_orders_data(self, df):
@@ -327,15 +309,28 @@ class DataCleaning:
         Returns:
             DataFrame: The cleaned DataFrame with valid orders data.
         """
+        print ("before len:",len(df))
+        distinct_product_card_number = df['card_number'].nunique()
+        print(f" before Number of distinct card_number: {distinct_product_card_number}")
+        distinct_product_codes_count = df['product_code'].nunique()
+        print(f"before Number of distinct product codes: {distinct_product_codes_count}")
+        distinct_store_code = df['store_code'].nunique()
+        print(f" before Number of distinct store_code: {distinct_store_code}")
+
         df.drop(columns=['first_name', 'last_name', '1', 'level_0'], inplace=True)
         df['user_uuid'] = df['user_uuid'].apply(lambda x: x if pd.notna(x) and x != "NULL" and len(x) == 36 else None)
         df['card_number'] = df['card_number'].apply(lambda x: self.clean_card_number(x))
-        distinct_product_card_number = df['card_number'].nunique()
-        print(f"Number of distinct card_number: {distinct_product_card_number}")
-        df = df.dropna(subset=['card_number'])
-        distinct_product_card_number = df['card_number'].nunique()
-        print(f"Number of distinct card_number: {distinct_product_card_number}")
+        # df = df.dropna(subset=['card_number'])
         df = df.drop_duplicates()
+       
+        distinct_product_card_number = df['card_number'].nunique()
+        print(f" after Number of distinct card_number: {distinct_product_card_number}")
+        distinct_product_codes_count = df['product_code'].nunique()
+        print(f" after Number of distinct product codes: {distinct_product_codes_count}")
+        distinct_store_code = df['store_code'].nunique()
+        print(f" after Number of distinct store_code: {distinct_store_code}")
+        print ("after len:",len(df))
+
         return df
 
     @staticmethod

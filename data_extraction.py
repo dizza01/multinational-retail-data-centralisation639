@@ -93,14 +93,14 @@ class DataExtractor:
         """
         payload = {}
         stores_dict = []
-        for i in range(no_of_stores):
+        for i in range(0, no_of_stores):
             url = f"{store_endpoint}/{i}"
             response = requests.get(url, headers=headers_dict, data=payload)
             response_dict = response.json()
             stores_dict.append(response_dict)
 
         df = pd.DataFrame(stores_dict)
-        print(df.head())
+        print(df)
         return df
 
     def extract_from_s3(self, s3_address):
@@ -163,37 +163,35 @@ if __name__ == "__main__":
     cleaner = DataCleaning()
     extractor = DataExtractor()
 
-    # Extract and clean card data
+    # # Extract and clean card data
     pdf_url = 'https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf'
     card_df = extractor.retrieve_pdf_data(pdf_url)
     cleaned_card_df = cleaner.clean_card_data(card_df)
 
 
-    # Extract and clean store data
-    # # Uncomment and update the following for store data extraction and cleaning
-    # no_stores_endpoint = "https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/number_stores"
-    # headers = {
-    #     'x-api-key': 'yFBQbwXe9J3sd6zWVAMrK6lcxxr0q1lr2PT6DDMX'
-    # }
-    # stores_endpoint = "https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details"
-    # no_of_stores = extractor.list_number_of_stores(no_stores_endpoint, headers)
-    # stores_df = extractor.retrieve_stores_data(stores_endpoint, headers, no_of_stores)
-    # cleaned_stores_df = cleaner.clean_store_data(stores_df)
+# #    # Extract and clean store data
+#     # Uncomment and update the following for store data extraction and cleaning
+#     no_stores_endpoint = "https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/number_stores"
+#     headers = {
+#         'x-api-key': 'yFBQbwXe9J3sd6zWVAMrK6lcxxr0q1lr2PT6DDMX'
+#     }
+#     stores_endpoint = "https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details"
+#     no_of_stores = extractor.list_number_of_stores(no_stores_endpoint, headers)
+#     stores_df = extractor.retrieve_stores_data(stores_endpoint, headers, no_of_stores)
+#     cleaned_stores_df = cleaner.clean_store_data(stores_df)
 
 
-    # Extract and clean products data
+    # # Extract and clean products data
     # # Uncomment and update the following for products data extraction and cleaning
     # s3_address = 's3://data-handling-public/products.csv'
     # products_df = extractor.extract_from_s3(s3_address)
     # products_df = cleaner.convert_product_weights(products_df)
-    # print(products_df.head())
     # cleaned_products_df = cleaner.clean_products_data(products_df)
-    # print(cleaned_products_df.head())
 
     # Extract and clean orders data
-    # # Uncomment and update the following for orders data extraction and cleaning
-    # orders_df = extractor.read_rds_table(connector, 'db_creds.yaml', 'RDS', 'orders_table')
-    # cleaned_orders_df = cleaner.clean_orders_data(orders_df)
+    # Uncomment and update the following for orders data extraction and cleaning
+    orders_df = extractor.read_rds_table(connector, 'db_creds.yaml', 'RDS', 'orders_table')
+    cleaned_orders_df = cleaner.clean_orders_data(orders_df)
 
     # Extract and clean users data
     # # Uncomment and update the following for users data extraction and cleaning
@@ -211,10 +209,10 @@ if __name__ == "__main__":
 
     # Upload cleaned data to the database
     pg_connector = DatabaseConnector()
-    # pg_connector.upload_to_db('pg_db_creds.yaml', 'PG', cleaned_card_df, 'dim_card_details')
+    pg_connector.upload_to_db('pg_db_creds.yaml', 'PG', cleaned_orders_df, 'orders_table')
+    pg_connector.upload_to_db('pg_db_creds.yaml', 'PG', cleaned_card_df, 'dim_card_details')
     # pg_connector.upload_to_db('pg_db_creds.yaml', 'PG', cleaned_users_df, 'dim_users')
     # pg_connector.upload_to_db('pg_db_creds.yaml', 'PG', cleaned_stores_df, 'dim_store_details')
     # pg_connector.upload_to_db('pg_db_creds.yaml', 'PG', cleaned_products_df, 'dim_products')
-    # pg_connector.upload_to_db('pg_db_creds.yaml', 'PG', cleaned_orders_df, 'orders_table')
     # pg_connector.upload_to_db('pg_db_creds.yaml', 'PG', cleaned_dates_df, 'dim_date_times')
     pg_connector.list_db_tables('pg_db_creds.yaml', 'PG')
